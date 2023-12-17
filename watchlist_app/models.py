@@ -7,6 +7,9 @@ from django.db import models
 #---------------------------------------------------------------------------
 
 class Movie(models.Model):
+    """
+    It's a model to save the movies
+    """
     name = models.name = models.CharField(
         max_length = 100,
     )
