@@ -28,18 +28,16 @@ class WatchlistAV(APIView):
 
     def get(self, request, *args, **kwargs):
         if 'pk' in request.query_params:
-            pk = request.query_params['pk']
             try:
-                instance = get_object_or_404(Watchlist, pk=pk)
+                pk = request.query_params['pk']
+                instance = Watchlist.objects.get(pk=pk)
+                serializer = WatchlistSerializer(instance=instance, many=False)
+                return Response(serializer.data, status=200)
             except Exception as e:
                 data = {
                     'message': f"Please enter a correct pk. {str(e)}"
                 }
                 return Response(data, status=400)
-            
-            serializer = WatchlistSerializer(instance=Watchlist, many=False)
-            return Response(serializer.data, status=200)
-
         else:
             instance = Watchlist.objects.all()
             serializer = WatchlistSerializer(instance=instance, many=True)
@@ -66,7 +64,7 @@ class WatchlistAV(APIView):
             pk = request.query_params.get('pk')
 
             try:
-                instance = Watchlist.objects.get(pk=pk)
+                instance = Watchlist.objects.get(pk=int(pk))
             except Exception as e:
                 
                 return Response(data, status=400)
@@ -133,7 +131,8 @@ class PlatformAV(APIView):
             
             serializer = PlatformSerializer(
                 instance = instance,
-                many = False
+                many = False,
+                context = {'request': request}
             )
             return Response(serializer.data, status=200)
 
@@ -141,7 +140,8 @@ class PlatformAV(APIView):
             instance = Platform.objects.all()
             serializer = PlatformSerializer(
                 instance = instance,
-                many = True
+                many = True,
+                context = {'request': request}
             )
             return Response(serializer.data, status=200)
         
@@ -170,7 +170,8 @@ class PlatformAV(APIView):
             
             serializer = PlatformSerializer(
                 instance = instance,
-                data = request.data
+                data = request.data,
+                partial = True
             )
             if serializer.is_valid():
                 serializer.save()

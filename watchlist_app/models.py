@@ -53,11 +53,11 @@ class Watchlist(models.Model):
         blank = False,
         null = True
     )
-    name = models.name = models.CharField(
+    name = models.CharField(  
         max_length = 100,
         blank = False,
         null = False,
-        unique = True
+        # unique = True
     )
     description = models.CharField(
         max_length = 300,

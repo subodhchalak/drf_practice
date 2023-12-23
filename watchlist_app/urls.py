@@ -1,7 +1,7 @@
 from django.urls import path
 from watchlist_app.views import (
-    Watchlist_list,
-    Watchlist_details
+    watchlist_list,
+    watchlist_details
 )
 
 from watchlist_app.api_views import (

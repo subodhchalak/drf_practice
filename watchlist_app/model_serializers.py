@@ -29,6 +29,10 @@ class WatchlistSerializer(serializers.ModelSerializer):
             'days_since_created'
         )
 
+        field_map = {
+            'name': 'Movie Name'
+        }
+
         read_only_fields = (
             'id',
             'created_at',
@@ -51,9 +55,15 @@ class WatchlistSerializer(serializers.ModelSerializer):
     def get_days_since_created(self, object):
         return (timezone.now() - object.created_at).days
     
-    # def to_representation(self, instance):
-    #     self.fields['platform'] = PlatformSerializer(many=False)
-    #     return super(self.__class__, self).to_representation(instance)
+    def to_representation(self, instance):
+        return super().to_representation(instance)
+    
+    # def update(self, instance, validated_data):
+    #     instance.name = validated_data.get('name', instance.name)
+    #     instance.name = validated_data.get('name', instance.description)
+    #     instance.active = validated_data.get('is_active', instance.is_active)
+    #     instance.save()
+    #     return instance
 
 
 #---------------------------------------------------------------------------
@@ -62,10 +72,9 @@ class WatchlistSerializer(serializers.ModelSerializer):
 
 
 class PlatformSerializer(serializers.ModelSerializer):
-    watchlist = serializers.PrimaryKeyRelatedField(
-        many = True,
-        read_only = True
-    )
+    watchlist = WatchlistSerializer(many=True)
+        
+
     class Meta:
         model = Platform
         fields = (
@@ -76,7 +85,69 @@ class PlatformSerializer(serializers.ModelSerializer):
             'updated_at',
             'watchlist',
         )
+ 
 
-    # def to_representation(self, instance):
-    #     self.fields['watchlist'] = WatchlistSerializer(many=True)
-    #     return super(PlatformSerializer, self).to_representation(instance)
+    def create(self, validated_data):
+        watchlist_data = validated_data.pop('watchlist')
+
+        platform = Platform.objects.create(
+            **validated_data
+        )
+
+        print(f"create watchlist_data: {watchlist_data}")
+        for wl in watchlist_data:
+            watch = Watchlist.objects.filter(name = wl['name'])
+            if len(watch) > 0:
+                continue
+            Watchlist.objects.create(
+                platform = platform,
+                ** wl
+            )
+        return platform
+    
+    
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get(
+            'name',
+            instance.name
+        )
+        instance.description = validated_data.get(
+            'description',
+            instance.description
+        )
+        instance.save()
+
+        watchlist_data = validated_data.pop('watchlist')
+        watchlists = instance.watchlist.all()
+        new_watch = []
+       
+        for wl in watchlist_data:
+            try:
+                watchlist = Watchlist.objects.filter(
+                    platform = instance,
+                    name = wl['name']
+                )
+                if watchlist:
+                    for w in watchlist: 
+                        w.name = wl.get('name', w.name)
+                        w.description = wl.get('description', w.description)
+                        w.is_active = wl.get('is_active', w.is_active)
+                        w.save()
+                        new_watch.append(w.id)
+                else:
+                    watch = Watchlist.objects.create(
+                        name = wl['name'],
+                        description = wl['description'],
+                        is_active = wl['is_active'],
+                        platform = instance
+                    )
+                    watch.save()
+                    new_watch.append(watch.id)
+            except Exception as e:
+                raise serializers.ValidationError(str(e))
+
+        for item in watchlists:
+            if item.id not in new_watch:
+                item.delete()
+
+        return instance
