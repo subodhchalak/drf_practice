@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from watchlist_app.models import Movie
+from watchlist_app.models import Watchlist
 
 
 #---------------------------------------------------------------------------
@@ -7,7 +7,7 @@ from watchlist_app.models import Movie
 #---------------------------------------------------------------------------
 
 
-class MovieSerializer(serializers.Serializer):
+class WatchlistSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only = True)
     name = serializers.CharField(required=False)
     description = serializers.CharField(required=False)
@@ -16,7 +16,7 @@ class MovieSerializer(serializers.Serializer):
     updated_at = serializers.DateTimeField(required=False, read_only=True)
 
     def create(self, validated_data):
-        return Movie.objects.create(**validated_data)
+        return Watchlist.objects.create(**validated_data)
     
     def update(self, instance, validated_data):
         instance.name = validated_data.get('name', instance.name)
@@ -24,3 +24,17 @@ class MovieSerializer(serializers.Serializer):
         instance.is_active = validated_data.get('is_active', instance.is_active)
         instance.save()
         return instance
+    
+    def validate(self, data):
+        errors = {}
+        if 'name' in data and len(data['name']) < 2:
+            errors['name'] = "Name must contain at least one character."
+
+        if 'name' in data and 'description' in data:
+            if data['name'] == data['description']:
+                errors['description'] = "Description should not be equal to name."
+        
+        if len(errors) > 0:
+            raise serializers.ValidationError(detail=errors)
+            
+        return data
