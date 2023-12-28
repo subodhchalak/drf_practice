@@ -3,7 +3,8 @@ from django.utils import timezone
 
 from watchlist_app.models import (
     Platform,
-    Watchlist
+    Watchlist,
+    Review
 )
 
 
@@ -16,6 +17,7 @@ from watchlist_app.models import (
 
 class WatchlistSerializer(serializers.ModelSerializer):
     days_since_created = serializers.SerializerMethodField()
+
     class Meta:
         model = Watchlist
         fields = (
@@ -26,17 +28,15 @@ class WatchlistSerializer(serializers.ModelSerializer):
             'is_active',
             'created_at',
             'updated_at',
-            'days_since_created'
+            'days_since_created',
+            'review'
         )
-
-        field_map = {
-            'name': 'Movie Name'
-        }
 
         read_only_fields = (
             'id',
             'created_at',
-            'updated_at'
+            'updated_at',
+            'review'
         )
 
         required_fields = (
@@ -58,12 +58,6 @@ class WatchlistSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         return super().to_representation(instance)
     
-    # def update(self, instance, validated_data):
-    #     instance.name = validated_data.get('name', instance.name)
-    #     instance.name = validated_data.get('name', instance.description)
-    #     instance.active = validated_data.get('is_active', instance.is_active)
-    #     instance.save()
-    #     return instance
 
 
 #---------------------------------------------------------------------------
@@ -74,7 +68,6 @@ class WatchlistSerializer(serializers.ModelSerializer):
 class PlatformSerializer(serializers.ModelSerializer):
     watchlist = WatchlistSerializer(many=True)
         
-
     class Meta:
         model = Platform
         fields = (
@@ -84,8 +77,14 @@ class PlatformSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
             'watchlist',
+            'review'
         )
- 
+
+        read_only_fields = (
+            'id',
+            'review'
+        )
+
 
     def create(self, validated_data):
         watchlist_data = validated_data.pop('watchlist')
@@ -94,7 +93,6 @@ class PlatformSerializer(serializers.ModelSerializer):
             **validated_data
         )
 
-        print(f"create watchlist_data: {watchlist_data}")
         for wl in watchlist_data:
             watch = Watchlist.objects.filter(name = wl['name'])
             if len(watch) > 0:
@@ -151,3 +149,23 @@ class PlatformSerializer(serializers.ModelSerializer):
                 item.delete()
 
         return instance
+    
+
+
+#---------------------------------------------------------------------------
+#                            ReviewSerializer
+#---------------------------------------------------------------------------
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = (
+            'id',
+            'reviewer',
+            'watchlist',
+            'rating',
+            'is_active',
+            'created_at',
+            'updated_at'
+        )
