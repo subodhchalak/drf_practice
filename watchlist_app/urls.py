@@ -47,16 +47,16 @@ urlpatterns = [
 
     #--------------------------------- Watchlist -------------------------------
     
-    # path(
-    #     route = 'watchlist/',
-    #     view = WatchlistGListCreateAV.as_view(),
-    #     name = 'watchlist'
-    # ),
-    # path(
-    #     route = 'watchlist/<int:pk>/',
-    #     view = WatchlistGRetriveUpdateDestroyAV.as_view(), 
-    #     name = 'watchlist_detail'
-    # ),
+    path(
+        route = 'watchlist/',
+        view = WatchlistGListCreateAV.as_view(),
+        name = 'watchlist'
+    ),
+    path(
+        route = 'watchlist/<int:pk>/',
+        view = WatchlistGRetriveUpdateDestroyAV.as_view(), 
+        name = 'watchlist_detail'
+    ),
 
     #--------------------------------- Platform --------------------------------
     
@@ -91,4 +91,4 @@ urlpatterns = [
 ]
 
 
-urlpatterns += router.urls
+# urlpatterns += router.urls

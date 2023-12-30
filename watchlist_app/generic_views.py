@@ -1,7 +1,10 @@
 # django imports
 from rest_framework import generics
 from rest_framework.exceptions import ValidationError
-
+from rest_framework.permissions import (
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly
+)
 
 # in app imports
 from watchlist_app.models import (
@@ -15,7 +18,10 @@ from watchlist_app.generic_serializers import (
     PlatformSerializer,
     ReviewSerializer
 )
-
+from watchlist_app.permissons import (
+    IsAdminOrReadyOnly,
+    IsReviewUserOrReadOnly
+)
 
 #---------------------------------------------------------------------------
 #                            Watchlist
@@ -24,6 +30,7 @@ from watchlist_app.generic_serializers import (
 class WatchlistGListCreateAV(generics.ListCreateAPIView):
     queryset = Watchlist.objects.all()
     serializer_class = WatchlistSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrReadyOnly]
 
 
 class WatchlistGRetriveUpdateDestroyAV(generics.RetrieveUpdateDestroyAPIView):
@@ -61,6 +68,7 @@ class ReviewGListAV(generics.ListAPIView):
 
 class ReviewGCreateAV(generics.CreateAPIView):
     serializer_class = ReviewSerializer
+    permission_classes = [IsAuthenticated]
     
     def queryset(self, request):
         pk = self.kwargs['pk']
@@ -76,6 +84,9 @@ class ReviewGCreateAV(generics.CreateAPIView):
         else:
             serializer.save(watchlist=watchlist, reviewer=reviewer)
 
+
 class ReviewGRetriveUpdateDestroyAV(generics.RetrieveUpdateDestroyAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
+    permission_classes = [IsReviewUserOrReadOnly]
+    
